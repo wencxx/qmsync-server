@@ -27,7 +27,7 @@ const controlledFormSchema = new mongoose.Schema({
     }],
     createdAt: {
         type: Date,
-        value: new Date()
+        default: Date.now
     }
 })
 
