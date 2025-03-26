@@ -84,3 +84,23 @@ exports.getForms = async (req, res) => {
         res.status(500).send('server error')
     }
 }
+
+exports.getPending = async (req, res) => {
+    const id = req.params.id
+    const currentDate = new Date()
+    try {
+        const pendingForms = await controlledForms.find({
+            filledOut: { $nin: [id] },
+            dueDate: { $gt: currentDate }
+        })
+
+        if(pendingForms.length){
+            res.status(200).send(pendingForms)
+        }else{
+            res.status(404).send('No forms found')
+        }
+    } catch (error) {
+        console.log(error)
+        res.status(500).send('server error')
+    }
+}

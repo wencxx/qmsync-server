@@ -21,6 +21,10 @@ const controlledFormSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    filledOut: [{
+        type: String,
+        required: false
+    }],
     createdAt: {
         type: Date,
         value: new Date()
