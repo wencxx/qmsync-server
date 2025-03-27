@@ -39,7 +39,6 @@ exports.addForsms = async (req, res) => {
                 placeholders.push(match[1].trim());
             }
 
-            // Upload the file to Firebase Storage under the 'documents' folder
             const fileName = `qmsync/${Date.now()}_${uploadedFile.originalname}`;
             const file = bucket.file(fileName);
 
@@ -72,7 +71,6 @@ exports.addForsms = async (req, res) => {
     }
 }
 
-
 exports.getForms = async (req, res) => {
     try {
         const forms = await controlledForms.find()
@@ -80,7 +78,7 @@ exports.getForms = async (req, res) => {
         if (forms.length) {
             res.status(200).send(forms)
         } else {
-            res.status(404).send('No forms found')
+            res.send('No forms found')
         }
     } catch (error) {
         console.log(error)
@@ -98,7 +96,7 @@ exports.getPending = async (req, res) => {
         if (pendingForms.length) {
             res.status(200).send(pendingForms)
         } else {
-            res.status(404).send('No forms found')
+            res.send('No forms found')
         }
     } catch (error) {
         console.log(error)
@@ -142,7 +140,7 @@ exports.getCompleted = async (req, res) => {
         if (completedForms.length) {
             res.status(200).send(formattedData)
         } else {
-            res.status(404).send('No forms found')
+            res.send('No forms found')
         }
     } catch (error) {
         console.log(error)
@@ -157,7 +155,7 @@ exports.generateDocs = async (req, res) => {
         const data = await submittedForms.findById(id).populate("formId");
 
         if (!data || !data.formId) {
-            return res.status(404).send({ message: "Form not found" });
+            return res.send("Form not found");
         }
 
         const { formId, ...restData } = data.toObject();
