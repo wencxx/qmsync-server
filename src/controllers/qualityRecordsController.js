@@ -1,16 +1,10 @@
 const PizZip = require('pizzip')
 const Docxtemplater = require('docxtemplater')
 const admin = require("firebase-admin");
-const controlledForms = require('../models/controlled-forms')
-const submittedForms = require('../models/submitted-forms')
+const qualityRecords = require('../models/quality-records')
+const submittedQualityRecords = require('../models/submitted-quality-records')
 const axios = require('axios')
 
-const serviceAccount = require("../config/firebase.json");
-
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: "gs://nopsscea-client.appspot.com"
-});
 
 const bucket = admin.storage().bucket();
 
@@ -52,7 +46,7 @@ exports.addForms = async (req, res) => {
 
             const parseRoles = JSON.parse(req.body.roles)
 
-            const createdForm = await controlledForms.create({
+            const createdForm = await qualityRecords.create({
                 ...req.body,
                 roles: parseRoles,
                 fileUrl: `https://storage.googleapis.com/${bucket.name}/${fileName}`,
@@ -76,7 +70,7 @@ exports.addForms = async (req, res) => {
 
 exports.getForms = async (req, res) => {
     try {
-        const forms = await controlledForms.find()
+        const forms = await qualityRecords.find()
 
         if (forms.length) {
             res.status(200).send(forms)
@@ -93,15 +87,14 @@ exports.getPending = async (req, res) => {
     const id = req.params.id
     const role = req.params.role
 
-    console.log(role)
     try {
-        const pendingForms = await controlledForms.find({
+        const pendingQualityRecords = await qualityRecords.find({
             filledOut: { $nin: [id] },
             roles: { $in: [role] },
         })
 
-        if (pendingForms.length) {
-            res.status(200).send(pendingForms)
+        if (pendingQualityRecords.length) {
+            res.status(200).send(pendingQualityRecords)
         } else {
             res.send('No forms found')
         }
@@ -113,10 +106,10 @@ exports.getPending = async (req, res) => {
 
 exports.submitForm = async (req, res) => {
     try {
-        const response = await submittedForms.create(req.body)
+        const response = await submittedQualityRecords.create(req.body)
 
         if (response) {
-            await controlledForms.findByIdAndUpdate(req.body.formId, {
+            await qualityRecords.findByIdAndUpdate(req.body.formId, {
                 $push: {
                     filledOut: req.body.userId
                 }
@@ -134,17 +127,18 @@ exports.submitForm = async (req, res) => {
 exports.getCompleted = async (req, res) => {
     const id = req.params.id
     try {
-        const completedForms = await submittedForms.find({
+        const completedQualityRecords = await submittedQualityRecords.find({
             userId: id
         }).populate('formId').lean()
 
-        const formattedData = completedForms.map(form => ({
+        const formattedData = completedQualityRecords.map(form => ({
             ...form.formId,
             submittedFormId: form._id,
             completedDate: form.createdAt
         }));
 
-        if (completedForms.length) {
+        console.log(completedQualityRecords)
+        if (completedQualityRecords.length) {
             res.status(200).send(formattedData)
         } else {
             res.send('No forms found')
@@ -155,12 +149,11 @@ exports.getCompleted = async (req, res) => {
     }
 }
 
-exports.getFacultyForms = async (req, res) => {
+exports.getFacultyRecords = async (req, res) => {
     const role = req.params.role
     try {
 
-        console.log(role)
-        const forms = await controlledForms.find({
+        const forms = await qualityRecords.find({
             roles: { $in: [role] }
         }).lean()
 
@@ -169,7 +162,7 @@ exports.getFacultyForms = async (req, res) => {
         for (const form of forms) {
             if (form.filledOut.length) {
                 for (const user of form.filledOut) {
-                    const submittedForm = await submittedForms.findOne({
+                    const submittedForm = await submittedQualityRecords.findOne({
                         userId: user,
                         formId: form._id
                     }).lean()
@@ -192,7 +185,7 @@ exports.getFacultyForms = async (req, res) => {
         if (data.length) {
             res.status(200).send(data)
         } else {
-            res.status(404).send('No forms found')
+            res.status(400).send('No forms found')
         }
     } catch (error) {
         console.log(error)
@@ -204,10 +197,10 @@ exports.generateDocs = async (req, res) => {
     const id = req.params.id;
 
     try {
-        const data = await submittedForms.findById(id).populate("formId");
+        const data = await submittedQualityRecords.findById(id).populate("formId");
 
         if (!data || !data.formId) {
-            return res.send("Form not found");
+            return res.send("Record not found");
         }
 
         const { formId, ...restData } = data.toObject();
@@ -232,3 +225,4 @@ exports.generateDocs = async (req, res) => {
         res.status(500).send({ message: "Server error", error });
     }
 };
+

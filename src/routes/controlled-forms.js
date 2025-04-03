@@ -5,9 +5,10 @@ const controlledFormsController = require('../controllers/controlledFormsControl
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/add', upload.single('file'), controlledFormsController.addForsms)
+router.post('/add', upload.single('file'), controlledFormsController.addForms)
 router.get('/get', controlledFormsController.getForms)
-router.get('/pending/:id', controlledFormsController.getPending)
+router.get('/get-faculty-forms/:role', controlledFormsController.getFacultyForms)
+router.get('/pending/:id/:role', controlledFormsController.getPending)
 router.post('/submit', controlledFormsController.submitForm)
 router.get('/completed/:id', controlledFormsController.getCompleted)
 router.get('/generateDocs/:id', controlledFormsController.generateDocs)

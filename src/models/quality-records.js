@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const controlledFormSchema = new mongoose.Schema({
+const qualityRecords = new mongoose.Schema({
     formId: { 
         type: String,
         required: true
@@ -35,4 +35,4 @@ const controlledFormSchema = new mongoose.Schema({
     }
 })
 
-module.exports = mongoose.model('controlledForms', controlledFormSchema)
+module.exports = mongoose.model('qualityRecords', qualityRecords)
