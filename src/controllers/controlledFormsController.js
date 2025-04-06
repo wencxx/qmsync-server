@@ -4,6 +4,8 @@ const admin = require("firebase-admin");
 const controlledForms = require('../models/controlled-forms')
 const submittedForms = require('../models/submitted-forms')
 const axios = require('axios')
+const notifications = require('../models/notifications')
+const moment = require('moment')
 
 const serviceAccount = require("../config/firebase.json");
 
@@ -60,6 +62,12 @@ exports.addForms = async (req, res) => {
             })
 
             if (createdForm) {
+                await notifications.create({
+                    title: `New form added: ${createdForm.formName}`,
+                    content: `A new controlled form is now available for submission. Deadline - ${moment(createdForm.dueDate).format('lll')}`,
+                    formType: "form",
+                    for: parseRoles
+                })
                 res.send('success')
             } else {
                 res.send('failed')
@@ -81,11 +89,34 @@ exports.getForms = async (req, res) => {
         if (forms.length) {
             res.status(200).send(forms)
         } else {
-            res.send('No forms found')
+            res.status(404).send('No forms found')
         }
     } catch (error) {
         console.log(error)
         res.status(500).send('server error')
+    }
+}
+
+exports.deleteForm = async (req, res) => {
+    const formId = req.params.id
+    
+    try {
+        if(!formId){
+            res.status(404).send("Form not found")
+            return
+        }
+
+        const deletedForm = await controlledForms.findByIdAndDelete(formId)
+
+        if(deletedForm){
+            await submittedForms.deleteMany({
+                formId: deletedForm._id
+            })
+            res.status(200).send('Deleted successfully')
+        }
+    } catch (error) {
+        console.log(error)
+        res.status(500).send('Server error')
     }
 }
 
@@ -207,7 +238,7 @@ exports.generateDocs = async (req, res) => {
         const data = await submittedForms.findById(id).populate("formId");
 
         if (!data || !data.formId) {
-            return res.send("Form not found");
+            return res.status(404).send("Form not found");
         }
 
         const { formId, ...restData } = data.toObject();
@@ -226,7 +257,7 @@ exports.generateDocs = async (req, res) => {
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
         res.setHeader("Content-Disposition", `attachment; filename=output.docx`);
 
-        res.send(buffer);
+        res.status(200).send(buffer);
     } catch (error) {
         console.error("Error generating document:", error);
         res.status(500).send({ message: "Server error", error });

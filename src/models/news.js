@@ -4,14 +4,14 @@ const newsSchema = new mongoose.Schema({
     title: {
         type: String
     },
-    descriptiop: {
+    description: {
         type: String,
         default: null 
     },
     createdAt: {
         type: Date,
-        value: Date.now
+        default: Date.now
     }
 })
 
-module.exports = mongoose.model('news', newsSchema)
+module.exports = mongoose.model('news', newsSchema) 

@@ -7,6 +7,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/add', upload.single('file'), qualityRecordsController.addForms)
 router.get('/get', qualityRecordsController.getForms)
+router.delete('/delete/:id', qualityRecordsController.deleteForm)
 router.get('/get-faculty-records/:role', qualityRecordsController.getFacultyRecords)
 router.get('/pending/:id/:role', qualityRecordsController.getPending)
 router.post('/submit', qualityRecordsController.submitForm)

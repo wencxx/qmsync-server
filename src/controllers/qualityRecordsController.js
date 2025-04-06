@@ -4,7 +4,8 @@ const admin = require("firebase-admin");
 const qualityRecords = require('../models/quality-records')
 const submittedQualityRecords = require('../models/submitted-quality-records')
 const axios = require('axios')
-
+const notifications = require('../models/notifications')
+const moment = require('moment')
 
 const bucket = admin.storage().bucket();
 
@@ -54,6 +55,12 @@ exports.addForms = async (req, res) => {
             })
 
             if (createdForm) {
+                await notifications.create({
+                    title: `New record added: ${createdForm.formName}`,
+                    content: `A new quality record form is now available for submission. Deadline - ${moment(createdForm.dueDate).format('lll')}`,
+                    formType: "record",
+                    for: parseRoles
+                })
                 res.send('success')
             } else {
                 res.send('failed')
@@ -75,11 +82,34 @@ exports.getForms = async (req, res) => {
         if (forms.length) {
             res.status(200).send(forms)
         } else {
-            res.send('No forms found')
+            res.status(404).send('No forms found')
         }
     } catch (error) {
         console.log(error)
         res.status(500).send('server error')
+    }
+}
+
+exports.deleteForm = async (req, res) => {
+    const recordId = req.params.id
+
+    try {
+        if (!recordId) {
+            res.status(404).send("Record not found")
+            return
+        }
+
+        const deletedRecord = await qualityRecords.findByIdAndDelete(recordId)
+
+        if (deletedRecord) {
+            await submittedQualityRecords.deleteMany({
+                formId: deletedRecord._id
+            })
+            res.status(200).send('Deleted successfully')
+        }
+    } catch (error) {
+        console.log(error)
+        res.status(500).send('Server error')
     }
 }
 
