@@ -12,5 +12,6 @@ app.use('/quality-records', require('./routes/quality-records'));
 app.use('/departments', require('./routes/department'));
 app.use('/faculties', require('./routes/faculty'));
 app.use('/news', require('./routes/news'));
+app.use('/common-details', require('./routes/common-details'));
 
 module.exports = app
