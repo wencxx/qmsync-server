@@ -10,7 +10,19 @@ const moment = require('moment')
 const serviceAccount = require("../config/firebase.json");
 
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert({
+        "type": "service_account",
+        "project_id": "nopsscea-client",
+        "private_key_id": "47aea8afac69ad4affcc972a23ada95ba74f9341",
+        "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCQdNX4qe5BMtSw\nLVsvtuU7AGmZJe+z4bN4akvte3OelafuRvXfWi17r+UR1EfFkfAWsidlC/7nBpay\nNJT8lWohlcCU/659B3uhZnfJ1bpFLsihemxrDsm25jMxbjys7nKBFcSevS09kM4/\nViLym02DKJJ5hN36hnetgpfcqehRqY7ligaKREjNbASzOY6EdPZ29UWc37F3bs4s\nBoLhlj9nirlGto94YaKR2aW2wyTVo5kUV6EHzK4FPpZjiFr7UUKAXKA0EBruhN2d\n/3VrVo/Z+wlNiFE3CJgPXObJ7E8NdpURAn/2Mju3GSz3zJqpUa5+4reZs7M0T3Jz\nZBPAw/gpAgMBAAECggEACRdrWIw0WCLfdyuRmbwKawdUfgygzIrLyWwyNWLvxMcx\nM5pAcvNJWceZFIFOV5E+4aTKfS3vN+HGpfZQeqGaNX0n6tC5LfoEtkSdTSUABUbj\nnmMWs/mxKQtNpUKle7JBn11r+5wXHvDwRBTzG975lsO8zTxXHqNsII3PqjYAzrPT\nl1YRAZdVb80lTwprGYM3C7AfWAH/d2PMU2yvxQyaoxJi90c0E8SMqE8PM1aFdfeW\niNWk9c9j2DE9Z/j3nob3rl1rGm4sUPZevfibf8iTSOOkYR0OExatkFs3iLocI+HD\ndEBq3oJXqA68wIOFZXRFPo4q19Y8MjZ4QkS7GeKu4QKBgQDHYsBpPTEkcacAUR0Q\ne2lSozJ75jQcaDR8jY05DDQ2h0w8tL6POrgMT0eSUzD9pjxlvyrMkkgdcDjmiS0V\niJVVKUZXopzg/Lb4uwsDNYsKEkkgKblOdlP5cKxfYAlNuJCis8svLtTpPS2CbTP1\n5IZjJJEfSujKXrXkJkUVEgTQyQKBgQC5eUwSbQKRkDvWDAbeeZ02dPupdEza8f5j\nYx9FxOGTtwnULJqjleO3dXGXWx26sa9WP/HzFXTSRi1lPHPMGetvA8W/KbJs7mr4\nmDyHuQ2ApXJajNIwD1nghjvKBZ4WwLSdP0D5kJH3pAgG2W86TanCLIbugoEkSBQX\nh8wu7JP8YQKBgGgfwR30b+J5W95FfekqmeEnCuk7WgFvxeE5xwOAxQ+o7n5RYabI\n4m7DRDw9J7t/AdGc2MwGpJSDE6QJBTtWna3gpTSE3mp8b01L2L9vSdITpI6gW36H\nOulsFwijzZgCB76AKF7WlSfM5CRVxSnnkurZoNP3ucRdW53vAmqzg0JJAoGACeB9\nvpVzh5DovtNRIlPTnWzJYhLBbP9qDpzes3ZylM0whs4BRijbQY/NhsPhZ2nC7pLl\nLY68892s2TFI8VuIABdxVmbAC7D+nVJuFsQyBeHJnyzUnJ6UqLI9SNrXulp0w9L0\ngNXEEC36B3NYywALxD1eyiDFA8ua1k3y/6S1lMECgYAZJFhvEyDdq6mGz+Xq4IAu\nFzxbWgICJoJgJIcwmihBpXj2CWfzQ+pXPxoJ9vljiYSMlOGEjgYRmLvPu/O+GkHE\nQLo3Y89ZenXlpQJLhBFFAXz5/zytArPfPPWnlQ3UzaCGcqOHJO/CNdeKIsFiMZwh\nUykIdR289/ayOmAONbQ6vQ==\n-----END PRIVATE KEY-----\n",
+        "client_email": "firebase-adminsdk-56gkb@nopsscea-client.iam.gserviceaccount.com",
+        "client_id": "107568636995586717679",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-56gkb%40nopsscea-client.iam.gserviceaccount.com",
+        "universe_domain": "googleapis.com"
+    }),
     storageBucket: "gs://nopsscea-client.appspot.com"
 });
 
@@ -99,16 +111,16 @@ exports.getForms = async (req, res) => {
 
 exports.deleteForm = async (req, res) => {
     const formId = req.params.id
-    
+
     try {
-        if(!formId){
+        if (!formId) {
             res.status(404).send("Form not found")
             return
         }
 
         const deletedForm = await controlledForms.findByIdAndDelete(formId)
 
-        if(deletedForm){
+        if (deletedForm) {
             await submittedForms.deleteMany({
                 formId: deletedForm._id
             })
