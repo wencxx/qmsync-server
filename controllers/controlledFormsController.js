@@ -1,32 +1,12 @@
 const PizZip = require('pizzip')
 const Docxtemplater = require('docxtemplater')
-const admin = require("firebase-admin");
 const controlledForms = require('../models/controlled-forms')
 const submittedForms = require('../models/submitted-forms')
 const axios = require('axios')
 const notifications = require('../models/notifications')
 const moment = require('moment')
+const cloudinary = require('../config/cloudinary')
 
-const serviceAccount = require("../config/firebase.json");
-
-admin.initializeApp({
-    credential: admin.credential.cert({
-        "type": "service_account",
-        "project_id": "nopsscea-client",
-        "private_key_id": "47aea8afac69ad4affcc972a23ada95ba74f9341",
-        "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCQdNX4qe5BMtSw\nLVsvtuU7AGmZJe+z4bN4akvte3OelafuRvXfWi17r+UR1EfFkfAWsidlC/7nBpay\nNJT8lWohlcCU/659B3uhZnfJ1bpFLsihemxrDsm25jMxbjys7nKBFcSevS09kM4/\nViLym02DKJJ5hN36hnetgpfcqehRqY7ligaKREjNbASzOY6EdPZ29UWc37F3bs4s\nBoLhlj9nirlGto94YaKR2aW2wyTVo5kUV6EHzK4FPpZjiFr7UUKAXKA0EBruhN2d\n/3VrVo/Z+wlNiFE3CJgPXObJ7E8NdpURAn/2Mju3GSz3zJqpUa5+4reZs7M0T3Jz\nZBPAw/gpAgMBAAECggEACRdrWIw0WCLfdyuRmbwKawdUfgygzIrLyWwyNWLvxMcx\nM5pAcvNJWceZFIFOV5E+4aTKfS3vN+HGpfZQeqGaNX0n6tC5LfoEtkSdTSUABUbj\nnmMWs/mxKQtNpUKle7JBn11r+5wXHvDwRBTzG975lsO8zTxXHqNsII3PqjYAzrPT\nl1YRAZdVb80lTwprGYM3C7AfWAH/d2PMU2yvxQyaoxJi90c0E8SMqE8PM1aFdfeW\niNWk9c9j2DE9Z/j3nob3rl1rGm4sUPZevfibf8iTSOOkYR0OExatkFs3iLocI+HD\ndEBq3oJXqA68wIOFZXRFPo4q19Y8MjZ4QkS7GeKu4QKBgQDHYsBpPTEkcacAUR0Q\ne2lSozJ75jQcaDR8jY05DDQ2h0w8tL6POrgMT0eSUzD9pjxlvyrMkkgdcDjmiS0V\niJVVKUZXopzg/Lb4uwsDNYsKEkkgKblOdlP5cKxfYAlNuJCis8svLtTpPS2CbTP1\n5IZjJJEfSujKXrXkJkUVEgTQyQKBgQC5eUwSbQKRkDvWDAbeeZ02dPupdEza8f5j\nYx9FxOGTtwnULJqjleO3dXGXWx26sa9WP/HzFXTSRi1lPHPMGetvA8W/KbJs7mr4\nmDyHuQ2ApXJajNIwD1nghjvKBZ4WwLSdP0D5kJH3pAgG2W86TanCLIbugoEkSBQX\nh8wu7JP8YQKBgGgfwR30b+J5W95FfekqmeEnCuk7WgFvxeE5xwOAxQ+o7n5RYabI\n4m7DRDw9J7t/AdGc2MwGpJSDE6QJBTtWna3gpTSE3mp8b01L2L9vSdITpI6gW36H\nOulsFwijzZgCB76AKF7WlSfM5CRVxSnnkurZoNP3ucRdW53vAmqzg0JJAoGACeB9\nvpVzh5DovtNRIlPTnWzJYhLBbP9qDpzes3ZylM0whs4BRijbQY/NhsPhZ2nC7pLl\nLY68892s2TFI8VuIABdxVmbAC7D+nVJuFsQyBeHJnyzUnJ6UqLI9SNrXulp0w9L0\ngNXEEC36B3NYywALxD1eyiDFA8ua1k3y/6S1lMECgYAZJFhvEyDdq6mGz+Xq4IAu\nFzxbWgICJoJgJIcwmihBpXj2CWfzQ+pXPxoJ9vljiYSMlOGEjgYRmLvPu/O+GkHE\nQLo3Y89ZenXlpQJLhBFFAXz5/zytArPfPPWnlQ3UzaCGcqOHJO/CNdeKIsFiMZwh\nUykIdR289/ayOmAONbQ6vQ==\n-----END PRIVATE KEY-----\n",
-        "client_email": "firebase-adminsdk-56gkb@nopsscea-client.iam.gserviceaccount.com",
-        "client_id": "107568636995586717679",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-56gkb%40nopsscea-client.iam.gserviceaccount.com",
-        "universe_domain": "googleapis.com"
-    }),
-    storageBucket: "gs://nopsscea-client.appspot.com"
-});
-
-const bucket = admin.storage().bucket();
 
 exports.addForms = async (req, res) => {
     try {
@@ -53,37 +33,48 @@ exports.addForms = async (req, res) => {
                 placeholders.push(match[1].trim());
             }
 
-            const fileName = `qmsync/${Date.now()}_${uploadedFile.originalname}`;
-            const file = bucket.file(fileName);
-
-            await file.save(uploadedFile.buffer, {
-                metadata: {
-                    contentType: uploadedFile.mimetype,
+            // Upload to Cloudinary (as raw file)
+            const result = await cloudinary.uploader.upload_stream(
+                {
+                    resource_type: 'raw',
+                    folder: 'qmsync',
+                    public_id: `${Date.now()}_${uploadedFile.originalname}`,
                 },
-            });
+                async (error, result) => {
+                    if (error) {
+                        console.error("Cloudinary upload error:", error);
+                        return res.status(500).json({ error: "File upload failed. Please try again." });
+                    }
 
-            await file.makePublic();
+                    const parseRoles = JSON.parse(req.body.roles);
 
-            const parseRoles = JSON.parse(req.body.roles)
+                    const createdForm = await controlledForms.create({
+                        ...req.body,
+                        roles: parseRoles,
+                        fileUrl: result.secure_url,
+                        placeholders,
+                    });
 
-            const createdForm = await controlledForms.create({
-                ...req.body,
-                roles: parseRoles,
-                fileUrl: `https://storage.googleapis.com/${bucket.name}/${fileName}`,
-                placeholders,
-            })
+                    if (createdForm) {
+                        await notifications.create({
+                            title: `New form added: ${createdForm.formName}`,
+                            content: `A new controlled form is now available for submission. Deadline - ${moment(createdForm.dueDate).format('lll')}`,
+                            formType: "form",
+                            for: parseRoles,
+                        });
+                        res.send('success');
+                    } else {
+                        res.send('failed');
+                    }
+                }
+            );
 
-            if (createdForm) {
-                await notifications.create({
-                    title: `New form added: ${createdForm.formName}`,
-                    content: `A new controlled form is now available for submission. Deadline - ${moment(createdForm.dueDate).format('lll')}`,
-                    formType: "form",
-                    for: parseRoles
-                })
-                res.send('success')
-            } else {
-                res.send('failed')
-            }
+            // Pipe file buffer to Cloudinary
+            const stream = require('stream');
+            const bufferStream = new stream.PassThrough();
+            bufferStream.end(uploadedFile.buffer);
+            bufferStream.pipe(result);
+
         } catch (error) {
             console.error("Error processing .docx file:", error.message);
             return res.status(400).send({ error: "Error processing .docx file. Ensure it's a valid template." });
@@ -92,7 +83,8 @@ exports.addForms = async (req, res) => {
         console.error("Server error:", error.message);
         res.status(500).json({ error: "Internal server error. Please try again." });
     }
-}
+};
+
 
 exports.getForms = async (req, res) => {
     try {

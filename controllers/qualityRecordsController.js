@@ -1,13 +1,11 @@
 const PizZip = require('pizzip')
 const Docxtemplater = require('docxtemplater')
-const admin = require("firebase-admin");
 const qualityRecords = require('../models/quality-records')
 const submittedQualityRecords = require('../models/submitted-quality-records')
 const axios = require('axios')
 const notifications = require('../models/notifications')
 const moment = require('moment')
-
-const bucket = admin.storage().bucket();
+const cloudinary = require('../config/cloudinary')
 
 exports.addForms = async (req, res) => {
     try {
@@ -34,37 +32,47 @@ exports.addForms = async (req, res) => {
                 placeholders.push(match[1].trim());
             }
 
-            const fileName = `qmsync/${Date.now()}_${uploadedFile.originalname}`;
-            const file = bucket.file(fileName);
-
-            await file.save(uploadedFile.buffer, {
-                metadata: {
-                    contentType: uploadedFile.mimetype,
+            // Upload to Cloudinary (as raw file)
+            const result = await cloudinary.uploader.upload_stream(
+                {
+                    resource_type: 'raw',
+                    folder: 'qmsync',
+                    public_id: `${Date.now()}_${uploadedFile.originalname}`,
                 },
-            });
+                async (error, result) => {
+                    if (error) {
+                        console.error("Cloudinary upload error:", error);
+                        return res.status(500).json({ error: "File upload failed. Please try again." });
+                    }
 
-            await file.makePublic();
+                    const parseRoles = JSON.parse(req.body.roles);
 
-            const parseRoles = JSON.parse(req.body.roles)
+                    const createdForm = await qualityRecords.create({
+                        ...req.body,
+                        roles: parseRoles,
+                        fileUrl: result.secure_url,
+                        placeholders,
+                    });
 
-            const createdForm = await qualityRecords.create({
-                ...req.body,
-                roles: parseRoles,
-                fileUrl: `https://storage.googleapis.com/${bucket.name}/${fileName}`,
-                placeholders,
-            })
+                    if (createdForm) {
+                        await notifications.create({
+                            title: `New record added: ${createdForm.formName}`,
+                            content: `A new quality record form is now available for submission. Deadline - ${moment(createdForm.dueDate).format('lll')}`,
+                            formType: "record",
+                            for: parseRoles
+                        })
+                        res.send('success')
+                    } else {
+                        res.send('failed');
+                    }
+                }
+            );
 
-            if (createdForm) {
-                await notifications.create({
-                    title: `New record added: ${createdForm.formName}`,
-                    content: `A new quality record form is now available for submission. Deadline - ${moment(createdForm.dueDate).format('lll')}`,
-                    formType: "record",
-                    for: parseRoles
-                })
-                res.send('success')
-            } else {
-                res.send('failed')
-            }
+            // Pipe file buffer to Cloudinary
+            const stream = require('stream');
+            const bufferStream = new stream.PassThrough();
+            bufferStream.end(uploadedFile.buffer);
+            bufferStream.pipe(result);
         } catch (error) {
             console.error("Error processing .docx file:", error.message);
             return res.status(400).send({ error: "Error processing .docx file. Ensure it's a valid template." });
