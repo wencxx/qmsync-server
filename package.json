@@ -12,7 +12,7 @@
   "dependencies": {
     "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
-    "cloudinary": "^2.6.0",
+    "cloudinary": "^1.30.0",
     "cors": "^2.8.5",
     "docxtemplater": "^3.60.2",
     "dotenv": "^16.4.7",
