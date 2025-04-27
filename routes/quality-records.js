@@ -11,6 +11,7 @@ router.delete('/delete/:id', qualityRecordsController.deleteForm)
 router.get('/get-faculty-records/:role', qualityRecordsController.getFacultyRecords)
 router.get('/pending/:id/:role', qualityRecordsController.getPending)
 router.post('/submit', qualityRecordsController.submitForm)
+router.post('/update/:id', qualityRecordsController.updateForm)
 router.get('/completed/:id', qualityRecordsController.getCompleted)
 router.get('/generateDocs/:id', qualityRecordsController.generateDocs)
 

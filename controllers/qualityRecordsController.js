@@ -162,6 +162,21 @@ exports.submitForm = async (req, res) => {
     }
 }
 
+exports.updateForm = async (req, res) => {
+    const { id } = req.params
+
+    try {
+        const updatedForm = await submittedQualityRecords.findByIdAndUpdate(id, req.body)
+
+        if (!updatedForm) return res.status(400).send('Failed to update form')
+
+        res.status(200).send('Updated form successfully')
+    } catch (error) {
+        console.log(error)
+        res.status(500).send('Server error')
+    }
+}
+
 exports.getCompleted = async (req, res) => {
     const id = req.params.id
     try {
@@ -169,10 +184,14 @@ exports.getCompleted = async (req, res) => {
             userId: id
         }).populate('formId').lean()
 
-        const formattedData = completedQualityRecords.map(form => ({
-            ...form.formId,
-            submittedFormId: form._id,
-            completedDate: form.createdAt
+        const formattedData = completedQualityRecords.map(({ formId, _id, createdAt, ...rest }) => ({
+            ...formId,
+            submittedFormId: _id,
+            completedDate: createdAt,
+            answers: {
+                ...rest,
+                id: _id
+            }
         }));
 
         console.log(completedQualityRecords)

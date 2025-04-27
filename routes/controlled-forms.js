@@ -11,6 +11,7 @@ router.delete('/delete/:id', controlledFormsController.deleteForm)
 router.get('/get-faculty-forms/:role', controlledFormsController.getFacultyForms)
 router.get('/pending/:id/:role', controlledFormsController.getPending)
 router.post('/submit', controlledFormsController.submitForm)
+router.post('/update/:id', controlledFormsController.updateForm)
 router.get('/completed/:id', controlledFormsController.getCompleted)
 router.get('/generateDocs/:id', controlledFormsController.generateDocs)
     

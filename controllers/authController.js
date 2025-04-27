@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const user = require('../models/user');
+const log = require('../models/user-logs')
 const jwt = require('jsonwebtoken')
 
 exports.register = async (req, res) => {
@@ -47,6 +48,13 @@ exports.login = async (req, res) => {
                 ...userFound,
                 token
             }
+
+            const logData = {
+                userId: userFound._id,
+                action: 'logged in'
+            }
+
+            await log.create(logData)
 
             res.status(200).send({ message: 'Login', userData })
         } else {
