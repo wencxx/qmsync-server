@@ -24,7 +24,7 @@ exports.addNews = async (req, res) => {
 
 exports.getNews = async (req, res) => {
     try {
-        const newsData = await news.find()
+        const newsData = await news.find().sort({ createdAt: -1 })
 
         if(newsData.length){
             res.status(200).send(newsData)
@@ -60,7 +60,7 @@ exports.getNotifications = async (req, res) => {
             for: {
                 $in: [role]
             }
-        })
+        }).sort({ createdAt: -1 })
 
         if(notificationsData.length){
             res.status(200).send(notificationsData)

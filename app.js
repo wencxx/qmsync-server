@@ -15,4 +15,4 @@ app.use('/news', require('./routes/news'));
 app.use('/common-details', require('./routes/common-details'));
 app.use('/logs', require('./routes/log'));
 
-module.exports = app
+module.exports = app    
